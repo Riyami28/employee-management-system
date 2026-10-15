@@ -1,0 +1,756 @@
+{
+  "info": {
+    "_postman_id": "b25296b2-02cd-5798-928d-3a00a6a9b070",
+    "name": "Employee Management System API",
+    "description": "Set baseUrl if the app is not on port 8080. Run the requests in order.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Employee CRUD, search and filters",
+      "item": [
+        {
+          "name": "Create employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Test User\",\n  \"email\": \"postman.user.{{$timestamp}}@example.com\",\n  \"phoneNumber\": \"+919876543210\",\n  \"department\": \"Engineering\",\n  \"designation\": \"Software Engineer\",\n  \"dateOfJoining\": \"2025-07-01\",\n  \"salary\": 900000.0,\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Employee ID is generated\", function () {",
+                  "    pm.expect(body.employeeId).to.match(/^EMP-\\d+$/);",
+                  "});",
+                  "pm.collectionVariables.set(\"employeeId\", body.id);",
+                  "pm.collectionVariables.set(\"employeeEmail\", body.email);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get employee by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/{{employeeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employeeId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns the created employee\", function () {",
+                  "    pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get(\"employeeEmail\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List employees (paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees?page=0&size=10&sortBy=id&sortDirection=desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "id"
+                },
+                {
+                  "key": "sortDirection",
+                  "value": "desc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response is a page\", function () {",
+                  "    const page = pm.response.json();",
+                  "    pm.expect(page.content).to.be.an(\"array\");",
+                  "    pm.expect(page).to.have.property(\"totalElements\");",
+                  "    pm.expect(page.page).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search employees by name or email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees?search=postman&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "postman"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Every result matches the search\", function () {",
+                  "    pm.response.json().content.forEach(function (e) {",
+                  "        const text = (e.fullName + \" \" + e.email + \" \" + e.employeeId).toLowerCase();",
+                  "        pm.expect(text).to.include(\"postman\");",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filter by department and status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees?department=Engineering&status=ACTIVE&page=0&size=5&sortBy=fullName&sortDirection=asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ],
+              "query": [
+                {
+                  "key": "department",
+                  "value": "Engineering"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "fullName"
+                },
+                {
+                  "key": "sortDirection",
+                  "value": "asc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Every result matches the filters\", function () {",
+                  "    pm.response.json().content.forEach(function (e) {",
+                  "        pm.expect(e.department).to.eql(\"Engineering\");",
+                  "        pm.expect(e.status).to.eql(\"ACTIVE\");",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update employee",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/{{employeeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employeeId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Test User (updated)\",\n  \"email\": \"{{employeeEmail}}\",\n  \"phoneNumber\": \"+919876543210\",\n  \"department\": \"Engineering\",\n  \"designation\": \"Senior Software Engineer\",\n  \"dateOfJoining\": \"2025-07-01\",\n  \"salary\": 1100000.0,\n  \"status\": \"INACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Changes are saved\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.designation).to.eql(\"Senior Software Engineer\");",
+                  "    pm.expect(body.status).to.eql(\"INACTIVE\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Export employees as CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/export?department=Engineering",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "department",
+                  "value": "Engineering"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response is CSV\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/csv\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Validation and error handling",
+      "item": [
+        {
+          "name": "Create employee with invalid input (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"\",\n  \"email\": \"not-an-email\",\n  \"phoneNumber\": \"123\",\n  \"department\": \"\",\n  \"designation\": \"\",\n  \"dateOfJoining\": null,\n  \"salary\": -100,\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Field errors are returned\", function () {",
+                  "    const errors = pm.response.json().fieldErrors;",
+                  "    pm.expect(errors).to.have.property(\"email\");",
+                  "    pm.expect(errors).to.have.property(\"salary\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create employee with invalid status value (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Test User\",\n  \"email\": \"postman.user.{{$timestamp}}@example.com\",\n  \"phoneNumber\": \"+919876543210\",\n  \"department\": \"Engineering\",\n  \"designation\": \"Software Engineer\",\n  \"dateOfJoining\": \"2025-07-01\",\n  \"salary\": 900000.0,\n  \"status\": \"RETIRED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create employee with duplicate email (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Test User\",\n  \"email\": \"{{employeeEmail}}\",\n  \"phoneNumber\": \"+919876543210\",\n  \"department\": \"Engineering\",\n  \"designation\": \"Software Engineer\",\n  \"dateOfJoining\": \"2025-07-01\",\n  \"salary\": 900000.0,\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test(\"Explains the conflict\", function () {",
+                  "    pm.expect(pm.response.json().message).to.include(\"already exists\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List with invalid status filter (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees?status=RETIRED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "RETIRED"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List with invalid sort field (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees?sortBy=password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "password"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get missing employee (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Delete (cleanup)",
+      "item": [
+        {
+          "name": "Delete employee",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/{{employeeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employeeId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get deleted employee (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/{{employeeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employeeId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete missing employee (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/{{employeeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employeeId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Departments",
+      "item": [
+        {
+          "name": "List departments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/departments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "departments"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns an array of names\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "employeeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employeeEmail",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

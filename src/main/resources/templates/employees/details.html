@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${employee.fullName})}"></head>
+<body>
+<div class="app-shell">
+    <th:block th:replace="~{fragments/layout :: navigation('employees')}"></th:block>
+
+    <main class="app-main" id="main-content" tabindex="-1">
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/employees}">Employees</a></li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${employee.employeeId}">EMP-1001</li>
+            </ol>
+        </nav>
+
+        <div class="page-header">
+            <div class="d-flex align-items-center gap-3">
+                <span class="avatar avatar-lg" aria-hidden="true"
+                      th:text="${#strings.toUpperCase(#strings.substring(employee.fullName, 0, 1))}">A</span>
+                <div>
+                    <h1 class="page-title mb-1" th:text="${employee.fullName}">Ananya Sharma</h1>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="employee-code" th:text="${employee.employeeId}">EMP-1001</span>
+                        <span class="text-secondary" th:text="${employee.designation} + ' · ' + ${employee.department}">
+                            Software Engineer · Engineering
+                        </span>
+                        <span th:replace="~{fragments/list-parts :: statusBadge(${employee.status})}">Active</span>
+                    </div>
+                </div>
+            </div>
+            <div class="page-actions">
+                <a class="btn btn-light" th:href="@{/employees}">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Back to Employees
+                </a>
+                <button type="button" class="btn btn-outline-danger"
+                        data-bs-toggle="modal" data-bs-target="#deleteModal"
+                        th:data-employee-name="${employee.fullName} + ' (' + ${employee.employeeId} + ')'"
+                        th:data-delete-url="@{/employees/{id}/delete(id=${employee.id})}">
+                    <i class="bi bi-trash3 me-1" aria-hidden="true"></i> Delete
+                </button>
+                <a class="btn btn-primary" th:href="@{/employees/{id}/edit(id=${employee.id})}">
+                    <i class="bi bi-pencil me-1" aria-hidden="true"></i> Edit
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-xl-8">
+                <section class="panel h-100" aria-labelledby="employmentTitle">
+                    <h2 class="panel-title" id="employmentTitle">Employment details</h2>
+                    <dl class="detail-grid">
+                        <div>
+                            <dt>Employee ID</dt>
+                            <dd th:text="${employee.employeeId}">EMP-1001</dd>
+                        </div>
+                        <div>
+                            <dt>Employment status</dt>
+                            <dd th:text="${employee.status.displayName}">Active</dd>
+                        </div>
+                        <div>
+                            <dt>Department</dt>
+                            <dd th:text="${employee.department}">Engineering</dd>
+                        </div>
+                        <div>
+                            <dt>Designation</dt>
+                            <dd th:text="${employee.designation}">Software Engineer</dd>
+                        </div>
+                        <div>
+                            <dt>Date of joining</dt>
+                            <dd th:text="${#temporals.format(employee.dateOfJoining, 'dd MMMM yyyy')}">15 July 2024</dd>
+                        </div>
+                        <div>
+                            <dt>Annual salary</dt>
+                            <dd class="tabular-nums"
+                                th:text="'₹' + ${#numbers.formatDecimal(employee.salary, 1, 'COMMA', 2, 'POINT')}">₹850,000.00</dd>
+                        </div>
+                    </dl>
+                </section>
+            </div>
+            <div class="col-12 col-xl-4">
+                <section class="panel h-100" aria-labelledby="contactTitle">
+                    <h2 class="panel-title" id="contactTitle">Contact</h2>
+                    <dl class="detail-list">
+                        <div>
+                            <dt>Full name</dt>
+                            <dd th:text="${employee.fullName}">Ananya Sharma</dd>
+                        </div>
+                        <div>
+                            <dt>Email address</dt>
+                            <dd><a th:href="'mailto:' + ${employee.email}" th:text="${employee.email}">ananya@example.com</a></dd>
+                        </div>
+                        <div>
+                            <dt>Phone number</dt>
+                            <dd><a th:href="'tel:' + ${employee.phoneNumber}" th:text="${employee.phoneNumber}">+919876543210</a></dd>
+                        </div>
+                    </dl>
+                    <hr>
+                    <dl class="detail-list detail-list-muted">
+                        <div>
+                            <dt>Record created (UTC)</dt>
+                            <dd th:text="${#temporals.format(employee.createdAt, 'dd MMM yyyy, HH:mm')}">15 Jul 2024, 10:00</dd>
+                        </div>
+                        <div>
+                            <dt>Last updated (UTC)</dt>
+                            <dd th:text="${#temporals.format(employee.updatedAt, 'dd MMM yyyy, HH:mm')}">15 Jul 2024, 10:00</dd>
+                        </div>
+                    </dl>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: deleteModal}"></div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

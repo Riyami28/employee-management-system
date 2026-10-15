@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: employee-management-system
+  config:
+    # Reads settings from .env in the folder the app is started from.
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:employee_db}?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+    username: ${DB_USERNAME:ems_user}
+    password: ${DB_PASSWORD:}
+
+  # Runs schema.sql on startup (CREATE TABLE IF NOT EXISTS).
+  sql:
+    init:
+      mode: always
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      tracking-modes: cookie
+
+springdoc:
+  paths-to-match: /api/**
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha

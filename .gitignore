@@ -1,0 +1,33 @@
+# Build output
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Local secrets - copy .env.example to .env instead of committing real values
+.env
+*.env
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# IDEs and editors
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+.sts4-cache/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+HELP.md
+node_modules/

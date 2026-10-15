@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th th:fragment="sortHeader(field, label, cssClass)" scope="col" th:class="${cssClass}"
+    th:with="sorted=${sortBy == field or (field == 'id' and sortBy == 'employeeId')},
+             nextDirection=${sorted and sortDirection == 'asc'} ? 'desc' : 'asc'"
+    th:attr="aria-sort=${sorted} ? (${sortDirection == 'asc'} ? 'ascending' : 'descending') : null">
+    <a class="sort-link"
+       th:href="@{/employees(search=${search}, department=${department}, status=${status}, size=${employees.size}, sortBy=${field}, sortDirection=${nextDirection})}"
+       th:title="'Sort by ' + ${label}">
+        <span th:text="${label}">Name</span>
+        <i th:if="${sorted}" class="bi" aria-hidden="true"
+           th:classappend="${sortDirection == 'asc'} ? 'bi-arrow-up' : 'bi-arrow-down'"></i>
+        <i th:unless="${sorted}" class="bi bi-arrow-down-up sort-idle" aria-hidden="true"></i>
+    </a>
+</th>
+
+<span th:fragment="statusBadge(status)" class="status-badge"
+      th:classappend="${status.name() == 'ACTIVE'} ? 'status-active' : 'status-inactive'">
+    <span class="status-dot" aria-hidden="true"></span><span th:text="${status.displayName}">Active</span>
+</span>
+
+</body>
+</html>

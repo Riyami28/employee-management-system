@@ -1,0 +1,8 @@
+# Tests use an in-memory H2 database instead of MySQL.
+spring:
+  sql:
+    init:
+      mode: never
+  jpa:
+    hibernate:
+      ddl-auto: create-drop

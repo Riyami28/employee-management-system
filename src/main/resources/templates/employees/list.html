@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Employees')}"></head>
+<body>
+<div class="app-shell">
+    <th:block th:replace="~{fragments/layout :: navigation('employees')}"></th:block>
+
+    <main class="app-main" id="main-content" tabindex="-1">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Employees</h1>
+                <p class="page-subtitle">Search, filter and manage employees.</p>
+            </div>
+            <div class="page-actions">
+                <a class="btn btn-outline-secondary" download
+                   th:href="@{/api/employees/export(search=${search}, department=${department}, status=${status}, sortBy=${sortBy}, sortDirection=${sortDirection})}">
+                    <i class="bi bi-download me-1" aria-hidden="true"></i> Export CSV
+                </a>
+                <a class="btn btn-primary" th:href="@{/employees/new}">
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> Add Employee
+                </a>
+            </div>
+        </div>
+
+        <section class="row g-3 mb-4" aria-label="Employee summary">
+            <div class="col-6 col-xl-3">
+                <div class="stat-card">
+                    <span class="stat-icon stat-icon-blue" aria-hidden="true"><i class="bi bi-people"></i></span>
+                    <div>
+                        <p class="stat-label">Total employees</p>
+                        <p class="stat-value" th:text="${summary.totalEmployees}">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="stat-card">
+                    <span class="stat-icon stat-icon-green" aria-hidden="true"><i class="bi bi-person-check"></i></span>
+                    <div>
+                        <p class="stat-label">Active</p>
+                        <p class="stat-value" th:text="${summary.activeEmployees}">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="stat-card">
+                    <span class="stat-icon stat-icon-gray" aria-hidden="true"><i class="bi bi-person-dash"></i></span>
+                    <div>
+                        <p class="stat-label">Inactive</p>
+                        <p class="stat-value" th:text="${summary.inactiveEmployees}">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="stat-card">
+                    <span class="stat-icon stat-icon-navy" aria-hidden="true"><i class="bi bi-diagram-3"></i></span>
+                    <div>
+                        <p class="stat-label">Departments</p>
+                        <p class="stat-value" th:text="${summary.totalDepartments}">0</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="employeeTableTitle">
+            <h2 class="visually-hidden" id="employeeTableTitle">Employee directory</h2>
+
+            <form class="panel-toolbar" method="get" th:action="@{/employees}" role="search">
+                <input type="hidden" name="size" th:value="${employees.size}">
+                <input type="hidden" name="sortBy" th:value="${sortBy}">
+                <input type="hidden" name="sortDirection" th:value="${sortDirection}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-12 col-md-6 col-xl-5">
+                        <label class="form-label" for="search">Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text" aria-hidden="true"><i class="bi bi-search"></i></span>
+                            <input class="form-control" type="search" id="search" name="search" maxlength="100"
+                                   th:value="${search}" placeholder="Name, email or employee ID">
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3 col-xl-3">
+                        <label class="form-label" for="department">Department</label>
+                        <select class="form-select" id="department" name="department" data-auto-submit>
+                            <option value="">All departments</option>
+                            <option th:each="dept : ${departments}" th:value="${dept}" th:text="${dept}"
+                                    th:selected="${dept == department}">Engineering</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3 col-xl-2">
+                        <label class="form-label" for="status">Status</label>
+                        <select class="form-select" id="status" name="status" data-auto-submit>
+                            <option value="">All statuses</option>
+                            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.displayName}"
+                                    th:selected="${s == status}">Active</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-xl-2 d-flex gap-2">
+                        <button class="btn btn-primary flex-fill" type="submit">Apply</button>
+                        <a th:if="${filtersActive}" class="btn btn-light flex-fill" th:href="@{/employees}">
+                            Clear
+                        </a>
+                    </div>
+                </div>
+                <p th:if="${filtersActive}" class="filter-summary mb-0 mt-3" role="status">
+                    <i class="bi bi-funnel" aria-hidden="true"></i>
+                    <span th:text="${employees.totalElements} + (${employees.totalElements == 1} ? ' employee matches' : ' employees match') + ' your filters.'">
+                        3 employees match your filters.
+                    </span>
+                    <a th:href="@{/employees}">Clear filters</a>
+                </p>
+            </form>
+
+            <div class="table-responsive" th:if="${!employees.content.isEmpty()}">
+                <table class="table table-hover align-middle mb-0 employee-table">
+                    <caption class="visually-hidden">
+                        Employees, sorted by <span th:text="${sortBy}">id</span>
+                        (<span th:text="${sortDirection}">desc</span>)
+                    </caption>
+                    <thead>
+                    <tr>
+                        <th scope="col"
+                            th:replace="~{fragments/list-parts :: sortHeader('id', 'ID', 'd-none d-md-table-cell')}">ID</th>
+                        <th scope="col"
+                            th:replace="~{fragments/list-parts :: sortHeader('fullName', 'Employee', '')}">Employee</th>
+                        <th scope="col" class="d-none d-xxl-table-cell">Phone</th>
+                        <th scope="col"
+                            th:replace="~{fragments/list-parts :: sortHeader('department', 'Department', 'd-none d-md-table-cell')}">Department</th>
+                        <th scope="col"
+                            th:replace="~{fragments/list-parts :: sortHeader('dateOfJoining', 'Joined', 'd-none d-xl-table-cell')}">Joined</th>
+                        <th scope="col"
+                            th:replace="~{fragments/list-parts :: sortHeader('salary', 'Salary', 'd-none d-xl-table-cell text-end')}">Salary</th>
+                        <th scope="col"
+                            th:replace="~{fragments/list-parts :: sortHeader('status', 'Status', 'd-none d-sm-table-cell')}">Status</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="employee : ${employees.content}">
+                        <td class="d-none d-md-table-cell text-nowrap">
+                            <span class="employee-code" th:text="${employee.employeeId}">EMP-1001</span>
+                        </td>
+                        <td>
+                            <a class="employee-name" th:href="@{/employees/{id}(id=${employee.id})}"
+                               th:text="${employee.fullName}">Ananya Sharma</a>
+                            <div class="cell-sub" th:text="${employee.email}">ananya@example.com</div>
+                            <div class="cell-sub d-xxl-none">
+                                <span class="d-md-none" th:text="${employee.employeeId} + ' · '">EMP-1001 · </span><span
+                                    class="tabular-nums" th:text="${employee.phoneNumber}">+919876543210</span>
+                            </div>
+                            <div class="d-sm-none mt-1">
+                                <span th:replace="~{fragments/list-parts :: statusBadge(${employee.status})}">Active</span>
+                            </div>
+                        </td>
+                        <td class="d-none d-xxl-table-cell text-nowrap text-secondary tabular-nums"
+                            th:text="${employee.phoneNumber}">+919876543210</td>
+                        <td class="d-none d-md-table-cell">
+                            <div class="text-nowrap" th:text="${employee.department}">Engineering</div>
+                            <div class="cell-sub cell-wrap" th:text="${employee.designation}">Software Engineer</div>
+                        </td>
+                        <td class="d-none d-xl-table-cell text-nowrap text-secondary"
+                            th:text="${#temporals.format(employee.dateOfJoining, 'dd MMM yyyy')}">15 Jul 2024</td>
+                        <td class="d-none d-xl-table-cell text-end text-nowrap tabular-nums"
+                            th:text="'₹' + ${#numbers.formatDecimal(employee.salary, 1, 'COMMA', 2, 'POINT')}">₹850,000.00</td>
+                        <td class="d-none d-sm-table-cell">
+                            <span th:replace="~{fragments/list-parts :: statusBadge(${employee.status})}">Active</span>
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-icon d-none d-sm-inline-flex" th:href="@{/employees/{id}(id=${employee.id})}"
+                               th:title="'View ' + ${employee.fullName}" th:aria-label="'View ' + ${employee.fullName}">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                            </a>
+                            <a class="btn btn-icon" th:href="@{/employees/{id}/edit(id=${employee.id})}"
+                               th:title="'Edit ' + ${employee.fullName}" th:aria-label="'Edit ' + ${employee.fullName}">
+                                <i class="bi bi-pencil" aria-hidden="true"></i>
+                            </a>
+                            <button type="button" class="btn btn-icon btn-icon-danger"
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                    th:data-employee-name="${employee.fullName} + ' (' + ${employee.employeeId} + ')'"
+                                    th:data-delete-url="@{/employees/{id}/delete(id=${employee.id})}"
+                                    th:title="'Delete ' + ${employee.fullName}"
+                                    th:aria-label="'Delete ' + ${employee.fullName}">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-state" th:if="${employees.content.isEmpty()}">
+                <span class="empty-icon" aria-hidden="true"><i class="bi bi-person-video2"></i></span>
+                <th:block th:if="${employees.totalElements > 0}">
+                    <h3 class="h5">This page is empty</h3>
+                    <p class="text-secondary">There are no employees on page <span th:text="${employees.page + 1}">4</span>.</p>
+                    <a class="btn btn-primary"
+                       th:href="@{/employees(search=${search}, department=${department}, status=${status}, size=${employees.size}, sortBy=${sortBy}, sortDirection=${sortDirection})}">
+                        Go to first page
+                    </a>
+                </th:block>
+                <th:block th:if="${employees.totalElements == 0 and filtersActive}">
+                    <h3 class="h5">No employees match your filters</h3>
+                    <p class="text-secondary">Try a different search term, department or status.</p>
+                    <a class="btn btn-primary" th:href="@{/employees}">Clear filters</a>
+                </th:block>
+                <th:block th:if="${employees.totalElements == 0 and !filtersActive}">
+                    <h3 class="h5">No employees yet</h3>
+                    <p class="text-secondary">Add your first employee to get started.</p>
+                    <a class="btn btn-primary" th:href="@{/employees/new}">
+                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> Add Employee
+                    </a>
+                </th:block>
+            </div>
+
+            <div class="panel-footer" th:if="${employees.totalElements > 0}">
+                <p class="mb-0 text-secondary small" aria-live="polite">
+                    Showing
+                    <strong th:text="${employees.content.isEmpty()} ? 0 : ${employees.page * employees.size + 1}">1</strong>–<strong
+                        th:text="${employees.page * employees.size + employees.content.size()}">10</strong>
+                    of <strong th:text="${employees.totalElements}">25</strong>
+                </p>
+
+                <form class="d-flex align-items-center gap-2" method="get" th:action="@{/employees}">
+                    <input type="hidden" name="search" th:if="${search}" th:value="${search}">
+                    <input type="hidden" name="department" th:if="${department}" th:value="${department}">
+                    <input type="hidden" name="status" th:if="${status}" th:value="${status}">
+                    <input type="hidden" name="sortBy" th:value="${sortBy}">
+                    <input type="hidden" name="sortDirection" th:value="${sortDirection}">
+                    <label class="small text-secondary text-nowrap" for="pageSize">Rows per page</label>
+                    <select class="form-select form-select-sm" id="pageSize" name="size" data-auto-submit>
+                        <option th:each="option : ${pageSizeOptions}" th:value="${option}" th:text="${option}"
+                                th:selected="${option == employees.size}">10</option>
+                    </select>
+                </form>
+
+                <nav aria-label="Employee list pages" th:if="${employees.totalPages > 1}">
+                    <ul class="pagination pagination-sm mb-0"
+                        th:with="pageUrl=@{/employees(search=${search}, department=${department}, status=${status}, size=${employees.size}, sortBy=${sortBy}, sortDirection=${sortDirection})}">
+                        <li class="page-item" th:classappend="${employees.first} ? 'disabled'">
+                            <a th:unless="${employees.first}" class="page-link"
+                               th:href="${pageUrl} + '&page=' + ${employees.page - 1}"
+                               aria-label="Previous page"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+                            <span th:if="${employees.first}" class="page-link" aria-disabled="true"
+                                  aria-label="Previous page"><i class="bi bi-chevron-left" aria-hidden="true"></i></span>
+                        </li>
+                        <li class="page-item" th:each="number : ${pageNumbers}"
+                            th:classappend="${number == employees.page} ? 'active'">
+                            <a class="page-link" th:href="${pageUrl} + '&page=' + ${number}" th:text="${number + 1}"
+                               th:attr="aria-current=${number == employees.page} ? 'page' : null"
+                               th:aria-label="'Page ' + ${number + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${employees.last} ? 'disabled'">
+                            <a th:unless="${employees.last}" class="page-link"
+                               th:href="${pageUrl} + '&page=' + ${employees.page + 1}"
+                               aria-label="Next page"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+                            <span th:if="${employees.last}" class="page-link" aria-disabled="true"
+                                  aria-label="Next page"><i class="bi bi-chevron-right" aria-hidden="true"></i></span>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: deleteModal}"></div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# MySQL for local development. Settings come from .env.
+# The SQL files below run only on the first start (empty volume).
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: ems-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-employee_db}
+      MYSQL_USER: ${DB_USERNAME:-ems_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env (copy .env.example to .env)}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env (copy .env.example to .env)}
+      TZ: UTC
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - ems-mysql-data:/var/lib/mysql
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed-data.sql:/docker-entrypoint-initdb.d/02-seed-data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  ems-mysql-data:

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:with="editing=${existingEmployee != null}">
+<head th:replace="~{fragments/layout :: head(${existingEmployee != null} ? 'Edit Employee' : 'Add Employee')}"></head>
+<body>
+<div class="app-shell">
+    <th:block th:replace="~{fragments/layout :: navigation(${editing} ? 'employees' : 'add')}"></th:block>
+
+    <main class="app-main" id="main-content" tabindex="-1">
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/employees}">Employees</a></li>
+                <li class="breadcrumb-item" th:if="${editing}">
+                    <a th:href="@{/employees/{id}(id=${existingEmployee.id})}"
+                       th:text="${existingEmployee.employeeId}">EMP-1001</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${editing} ? 'Edit' : 'Add employee'">
+                    Add employee
+                </li>
+            </ol>
+        </nav>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" th:text="${editing} ? 'Edit ' + ${existingEmployee.fullName} : 'Add Employee'">
+                    Add Employee
+                </h1>
+                <p class="page-subtitle">All fields are required.</p>
+            </div>
+        </div>
+
+        <form class="panel form-panel needs-validation" method="post" novalidate th:object="${employee}"
+              th:action="${editing} ? @{/employees/{id}(id=${existingEmployee.id})} : @{/employees}">
+
+            <div class="alert alert-danger d-flex gap-2" role="alert" th:if="${#fields.hasErrors('*')}" tabindex="-1"
+                 id="formErrors">
+                <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
+                <div>
+                    <strong>Please fix the highlighted fields.</strong>
+                    <span th:if="${#fields.hasErrors('email')}" th:text="${#fields.errors('email')[0]}"
+                          class="d-block">Email already exists.</span>
+                </div>
+            </div>
+
+            <fieldset class="form-section">
+                <legend class="form-section-title">Personal information</legend>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="fullName">Full name</label>
+                        <input class="form-control" type="text" th:field="*{fullName}" th:errorclass="is-invalid"
+                               required minlength="2" maxlength="100" autocomplete="name"
+                               aria-describedby="fullNameFeedback">
+                        <div class="invalid-feedback" id="fullNameFeedback"
+                             th:text="${#fields.hasErrors('fullName')} ? ${#fields.errors('fullName')[0]} : 'Full name is required (2 to 100 characters).'">
+                            Full name is required.
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="email">Email address</label>
+                        <input class="form-control" type="email" th:field="*{email}" th:errorclass="is-invalid"
+                               required maxlength="150" autocomplete="email" pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                               aria-describedby="emailFeedback">
+                        <div class="invalid-feedback" id="emailFeedback"
+                             th:text="${#fields.hasErrors('email')} ? ${#fields.errors('email')[0]} : 'Please enter a valid email address, e.g. name@example.com.'">
+                            Please enter a valid email address.
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="phoneNumber">Phone number</label>
+                        <input class="form-control" type="tel" th:field="*{phoneNumber}" th:errorclass="is-invalid"
+                               required pattern="\+?[0-9]{10,15}" maxlength="16" autocomplete="tel"
+                               placeholder="+919876543210" aria-describedby="phoneNumberHelp phoneNumberFeedback">
+                        <div class="form-text" id="phoneNumberHelp">10 to 15 digits, optionally starting with +.</div>
+                        <div class="invalid-feedback" id="phoneNumberFeedback"
+                             th:text="${#fields.hasErrors('phoneNumber')} ? ${#fields.errors('phoneNumber')[0]} : 'Phone number must contain 10 to 15 digits and may start with +.'">
+                            Please enter a valid phone number.
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="form-section">
+                <legend class="form-section-title">Job information</legend>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="department">Department</label>
+                        <input class="form-control" type="text" th:field="*{department}" th:errorclass="is-invalid"
+                               required maxlength="100" list="departmentOptions" autocomplete="off"
+                               aria-describedby="departmentHelp departmentFeedback">
+                        <datalist id="departmentOptions">
+                            <option th:each="dept : ${departments}" th:value="${dept}"></option>
+                        </datalist>
+                        <div class="form-text" id="departmentHelp">Choose an existing department or type a new one.</div>
+                        <div class="invalid-feedback" id="departmentFeedback"
+                             th:text="${#fields.hasErrors('department')} ? ${#fields.errors('department')[0]} : 'Department is required.'">
+                            Department is required.
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="designation">Designation</label>
+                        <input class="form-control" type="text" th:field="*{designation}" th:errorclass="is-invalid"
+                               required maxlength="100" autocomplete="organization-title"
+                               aria-describedby="designationFeedback">
+                        <div class="invalid-feedback" id="designationFeedback"
+                             th:text="${#fields.hasErrors('designation')} ? ${#fields.errors('designation')[0]} : 'Designation is required.'">
+                            Designation is required.
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="dateOfJoining">Date of joining</label>
+                        <input class="form-control" type="date" th:field="*{dateOfJoining}" th:errorclass="is-invalid"
+                               required aria-describedby="dateOfJoiningFeedback">
+                        <div class="invalid-feedback" id="dateOfJoiningFeedback"
+                             th:text="${#fields.hasErrors('dateOfJoining')} ? ${#fields.errors('dateOfJoining')[0]} : 'Date of joining is required.'">
+                            Date of joining is required.
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="salary">Annual salary (₹)</label>
+                        <div class="input-group has-validation">
+                            <span class="input-group-text" aria-hidden="true">₹</span>
+                            <input class="form-control" type="number" th:field="*{salary}" th:errorclass="is-invalid"
+                                   required min="0" max="9999999999.99" step="0.01" inputmode="decimal"
+                                   aria-describedby="salaryFeedback">
+                            <div class="invalid-feedback" id="salaryFeedback"
+                                 th:text="${#fields.hasErrors('salary')} ? ${#fields.errors('salary')[0]} : 'Salary is required and must not be negative (up to 2 decimal places).'">
+                                Salary is required and must not be negative.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="status">Employment status</label>
+                        <select class="form-select" th:field="*{status}" th:errorclass="is-invalid" required
+                                aria-describedby="statusFeedback">
+                            <option value="">Select status</option>
+                            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.displayName}">Active</option>
+                        </select>
+                        <div class="invalid-feedback" id="statusFeedback"
+                             th:text="${#fields.hasErrors('status')} ? ${#fields.errors('status')[0]} : 'Employment status is required.'">
+                            Employment status is required.
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="form-actions">
+                <a class="btn btn-light"
+                   th:href="${editing} ? @{/employees/{id}(id=${existingEmployee.id})} : @{/employees}">Cancel</a>
+                <button class="btn btn-primary" type="submit"
+                        th:attr="data-loading-text=${editing} ? 'Saving…' : 'Adding…'">
+                    <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
+                    <span th:text="${editing} ? 'Save changes' : 'Add employee'">Add employee</span>
+                </button>
+            </div>
+        </form>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
